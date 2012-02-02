@@ -110,28 +110,67 @@ define([],function(){
 			formatTime = function(n){ return Number(n.toFixed(format)); }
 		}
 
-		/*
+
 		var handle = {
+			// methods
+			pause:function(_delay){
+				if(_delay){
+					setTimeout(function(){
+						console.log('paused delay', _delay);
+						pause()
+					}, _delay);
+					//console.log('paused delay', _delay);
+					//setTimeout(pause, _delay);
+				}else{
+					pause();
+				}
+				return getEvent();
+			},
+			resume: function(_delay){
+				if(_delay){
+					setTimeout(function(){
+						console.log('resumed delay', _delay);
+						resume()
+					}, _delay);
+				}else{
+					resume();
+				}
+				return getEvent();
+			},
+			start: function(_delay){
+				// this delay can be overwritten
+				start(_delay);
+				return getEvent();
+			},
+			stop:stop,
+			remove:stop,
 
-
-		}
-
-		*/
-
-		var getEvent = function(){
-			var o = {
-				time:formatTime(tick),
-				playtime:formatTime(tick),
-				elapsed:formatTime(elapsed),
-				pausetime:formatTime(pausetime),
-				increment:formatTime(increment),
-				percentage:0
-			};
-			if(!!d) o.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
-			return o;
-		}
+			// properties
+			time:0,
+			playtime:0,
+			elapsed:0,
+			pausetime:0,
+			increment:0,
+			percentage:0,
+			playing:false
+		};
 
 		var callback = function(){}, endback = function(){};
+
+		var getEvent = function(){
+			handle.time = 		formatTime(tick);
+			handle.playtime = 	formatTime(tick);
+			handle.elapsed = 	formatTime(elapsed);
+			handle.pausetime = 	formatTime(pausetime);
+			handle.increment = 	formatTime(increment);
+			handle.percentage = 0;
+			handle.playing = 	playing;
+			handle.then = 		callback;
+
+			if(!!d) handle.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
+
+			return handle;
+		}
 
 		if(!!cb && !!i){
 			callback = function(){
@@ -145,21 +184,21 @@ define([],function(){
 		if(!!d && !!onEnd){
 			endback = function(){
 				if(tick >= d){
-					clearInterval(h);
+					stopTimer();
 					onEnd(getEvent());
 				}
 			}
 		}else if(!!d && !!cb){
 			endback = function(){
 				if(tick >= d){
-					clearInterval(h);
+					stopTimer();
 					cb(getEvent());
 				}
 			}
 		}else if(!!d){
 			endback = function(){
 				if(tick >= d){
-					clearInterval(h);
+					stopTimer();
 				}
 			}
 		}else{
@@ -168,6 +207,7 @@ define([],function(){
 
 		// The actual timer happens here
 		var startTimer = function(){
+			playing = true;
 			h = setInterval(function(){
 				tick = time() - starttime - pausetime;
 				increment = Math.max(0, time() - startinc);
@@ -177,25 +217,27 @@ define([],function(){
 			}, 1);
 		}
 
-		// controlling methods
-		var pause = function(_delay){
-			console.log('pause!!!!');
+		var stopTimer = function(){
+			playing = false;
 			clearInterval(h);
+		}
+
+		// controlling methods
+		var pause = function(){
+			console.log('pause!!!!');
+			stopTimer();
 			pausetick = time();
 			return getEvent();
 		}
 
-		var resume = function(_delay){
-			if(_delay !== undefined) resumedelay = _delay;
-			setTimeout(function(){
-				console.log('resume!!!!');
-				if(stopped){
-					start();
-				}else{
-					pausetime += time() - pausetick;
-					startTimer();
-				}
-			}, resumedelay);
+		var resume = function(){
+			console.log('resume!!!!');
+			if(stopped){
+				start();
+			}else{
+				pausetime += time() - pausetick;
+				startTimer();
+			}
 			return getEvent();
 		}
 
@@ -203,7 +245,7 @@ define([],function(){
 			// stop cannot be delayed because
 			// it needs to happen syncronously
 			stopped = true;
-			clearInterval(h);
+			stopTimer();
 			var event = getEvent();
 			pausetime = 0;
 			pausetick = 0;
@@ -231,29 +273,7 @@ define([],function(){
 
 		start();
 
-		// handles
-		return {
-			pause:function(_delay){
-				if(_delay){
-					setTimeout(pause, _delay);
-				}else{
-					pause();
-				}
-				return getEvent();
-			},
-			resume: function(_delay){
-				if(_delay){
-					setTimeout(resume, _delay);
-				}else{
-					resume();
-				}
-				return getEvent();
-			},
-			start:start,
-			stop:stop,
-			remove:stop,
-			getEvent:getEvent
-		};
+		return handle;
 	}
 
 	return timer;

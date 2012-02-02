@@ -4,11 +4,11 @@
     <title>DX Timer Test</title>
     <script src="../timer.js"></script>
     <script>
-		timer(function(evt){
+		/*timer(function(evt){
 			console.log('timer done after 10', evt)
 		}, 10);
 
-		/*var tmr = timer();
+		var tmr = timer();
 
 		timer(function(){
 			console.log('timer done after 100', tmr.stop())
@@ -21,12 +21,12 @@
 */
 		tmr = timer(function(evt){
 			console.log(' ** timer start stop', evt)
-		}, 500, 50);
+		}, 1000, 50);
 
-		tmr.pause(100);
-		tmr.resume(400);
-		tmr.pause(1000);
-		tmr.resume(1200);
+		tmr.pause(200).resume(400).pause(600).resume(1200);
+
+		//tmr.pause(1000);
+		//tmr.resume(1200);
 
 		//console.log()
 
