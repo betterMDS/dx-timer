@@ -64,5 +64,4 @@ This is not only verbose, but it lacks versatility. The setTimeout can only be d
 
 <img src="http://clubajax.org/wp-content/uploads/2010/02/Mike125x150.jpg" />
 
-<figure><script type="text/javascript" src="https://gist.github.com/1396395.js?file=AdvancedBrokenContext.js"></script><br />
-<figcaption> Example #1 &#8211; Advanced Broken Context</figcaption>
+<script type="text/javascript" src="https://gist.github.com/1396395.js?file=AdvancedBrokenContext.js"></script>
