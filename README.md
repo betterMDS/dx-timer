@@ -73,7 +73,7 @@ Timer Event
 Unlike a traditional setTimeout, timer passes an event:
 
 ```javascript
-timer(function(TimerEvent){}, 10);
+timer(function(TIMER_EVENT){}, 10);
 ```
 
 This event contains all information that has occurred up until that point in time:

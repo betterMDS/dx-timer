@@ -80,7 +80,6 @@ define([],function(){
 
 		// options
 		d = o.dur || o.duration || o.d || Infinity;
-		//console.info('TIME DUR:', d, o.dur, o.duration, o.d);
 		i = o.inc || o.increment || o.i || 0;
 		ease = o.ease || function(n){ return n; }
 		delay = o.delay===true ? DELAY : o.delay ? o.delay : 0;
@@ -95,9 +94,12 @@ define([],function(){
 
 		console.log("timer options:", id, d, i, delay, cb);
 
-		var stopped = false;
+		var
+			stopped = false,
+			playing = false,
 
-		var starttime=0, startinc=0, pausetime=0, pausetick=0, elapsed=0, tick=0, increment=0;
+			starttime=0, startinc=0, pausetime=0, pausetick=0, elapsed=0, tick=0,
+			increment=0, pausedelay=0, resumedelay=0;
 
 		var formatTime = function(n){ return n; };
 		if(format == "integer"){
@@ -108,7 +110,15 @@ define([],function(){
 			formatTime = function(n){ return Number(n.toFixed(format)); }
 		}
 
-		var getArg = function(){
+		/*
+		var handle = {
+
+
+		}
+
+		*/
+
+		var getEvent = function(){
 			var o = {
 				time:formatTime(tick),
 				playtime:formatTime(tick),
@@ -117,7 +127,7 @@ define([],function(){
 				increment:formatTime(increment),
 				percentage:0
 			};
-			if(!!d) o.p = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
+			if(!!d) o.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
 			return o;
 		}
 
@@ -126,7 +136,7 @@ define([],function(){
 		if(!!cb && !!i){
 			callback = function(){
 				if(increment >= i){
-					cb(getArg());
+					cb(getEvent());
 					startinc = time();
 				}
 			}
@@ -136,14 +146,14 @@ define([],function(){
 			endback = function(){
 				if(tick >= d){
 					clearInterval(h);
-					onEnd(getArg());
+					onEnd(getEvent());
 				}
 			}
 		}else if(!!d && !!cb){
 			endback = function(){
 				if(tick >= d){
 					clearInterval(h);
-					cb(getArg());
+					cb(getEvent());
 				}
 			}
 		}else if(!!d){
@@ -156,46 +166,55 @@ define([],function(){
 			//console.warn("infinite timer")
 		}
 
+		// The actual timer happens here
 		var startTimer = function(){
 			h = setInterval(function(){
 				tick = time() - starttime - pausetime;
 				increment = Math.max(0, time() - startinc);
 				elapsed = time()-starttime;
-
 				callback();
 				endback();
 			}, 1);
 		}
 
-		var pause = function(){
+		// controlling methods
+		var pause = function(_delay){
+			console.log('pause!!!!');
 			clearInterval(h);
 			pausetick = time();
-			return getArg();
+			return getEvent();
 		}
 
-		var resume = function(){
-			if(stopped){
-				start();
-			}else{
-				pausetime += time() - pausetick;
-				startTimer();
-			}
-			return getArg();
+		var resume = function(_delay){
+			if(_delay !== undefined) resumedelay = _delay;
+			setTimeout(function(){
+				console.log('resume!!!!');
+				if(stopped){
+					start();
+				}else{
+					pausetime += time() - pausetick;
+					startTimer();
+				}
+			}, resumedelay);
+			return getEvent();
 		}
 
 		var stop = function(){
+			// stop cannot be delayed because
+			// it needs to happen syncronously
 			stopped = true;
 			clearInterval(h);
-			var o = getArg();
+			var event = getEvent();
 			pausetime = 0;
 			pausetick = 0;
 			elapsed = 0;
 			tick = 0;
 			increment = 0;
-			return o;
+			return event;
 		}
 
-		var start = function(){
+		var start = function(_delay){
+			if(_delay !== undefined) delay = _delay;
 			if(pausedAtStart){
 				pausedAtStart = false;
 				stopped = true;
@@ -212,13 +231,28 @@ define([],function(){
 
 		start();
 
+		// handles
 		return {
-			pause:pause,
-			resume:resume,
+			pause:function(_delay){
+				if(_delay){
+					setTimeout(pause, _delay);
+				}else{
+					pause();
+				}
+				return getEvent();
+			},
+			resume: function(_delay){
+				if(_delay){
+					setTimeout(resume, _delay);
+				}else{
+					resume();
+				}
+				return getEvent();
+			},
 			start:start,
 			stop:stop,
 			remove:stop,
-			getEvent:getArg
+			getEvent:getEvent
 		};
 	}
 
