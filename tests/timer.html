@@ -1,0 +1,42 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 5//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+<head>
+    <title>DX Timer Test</title>
+    <script src="../timer.js"></script>
+    <script>
+		timer(function(evt){
+			console.log('timer done after 10', evt)
+		}, 10);
+
+		var tmr = timer();
+
+		timer(function(){
+			console.log('timer done after 100', tmr.stop())
+		}, 100);
+
+		timer(function(evt){
+			console.log('timer increment', evt)
+		}, 200, 50);
+
+
+		tmr = timer(function(evt){
+			console.log('timer start stop', evt)
+		}, 500, 50);
+
+		timer(function(){ tmr.pause(); }, 100);
+		timer(function(){ tmr.resume(); }, 200);
+		timer(function(){ tmr.pause(); }, 400);
+		timer(function(){ tmr.resume(); }, 600);
+
+		//console.log()
+    </script>
+
+</head>
+<body>
+    <h1 id="header">DX Timer Test</h1>
+
+	<div>
+
+	</div>
+</body>
+</html>
