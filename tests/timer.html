@@ -4,10 +4,16 @@
     <title>DX Timer Test</title>
     <script src="../timer.js"></script>
     <script>
-		/*timer(function(evt){
-			console.log('timer done after 10', evt)
-		}, 10);
+		// TODO:
+		// get pause and resume times to equate to ellapsed time: tmr.pause(200).resume(400)
+		// no dur == Infinity
+		// no arguments should create an Infinite timer
 
+		timer(function(evt){
+			console.log(' > timer done after 10', evt)
+		}, 10)//.then(function(){ console.log('--------- done'); });
+
+		/*
 		var tmr = timer();
 
 		timer(function(){
@@ -18,12 +24,44 @@
 			console.log('timer increment', evt)
 		}, 200, 50);
 
-*/
-		tmr = timer(function(evt){
-			console.log(' ** timer start stop', evt)
-		}, 1000, 50);
 
-		tmr.pause(200).resume(400).pause(600).resume(1200);
+		tmr = timer(function(evt){
+			console.log(' > timer start stop', evt)
+		}, 300, 50);
+
+*/
+		var ns = {
+			ctx: function(){
+				id:'it is good!',
+				timer(this, function(){
+					console.log(' > ctx func timer done after 10', this.id);
+				}, 10);
+			},
+			strDone: function(){
+				console.log(' > str func timer done after 10');
+			},
+			str: function(){
+				timer(this, this.strDone, 10);
+			},
+			fnDone: function(){
+				console.log(' > fn timer done after 10');
+			},
+			fn: function(){
+				timer(this, 'fnDone', 10);
+			}
+		}
+
+		ns.ctx();
+		ns.str();
+		ns.fn();
+
+
+		var inf = timer(function(){ console.log('never called')}, 0, 500);
+		timer(function(){
+			console.log('stop other timer', inf.pause());
+		}, 2001);
+
+		//tmr.pause(200).resume(400).pause(600).resume(1200).then(function(){ console.log('we are done'); }).then(function(){ console.log('we are REALLY done'); });
 
 		//tmr.pause(1000);
 		//tmr.resume(1200);
@@ -32,13 +70,30 @@
 
 		// timer(1000).pause(100).resume(200).then('foo');
     </script>
-
+	<style>
+		#block{
+			width:50px;
+			height:50px;
+			background:#dd0000;
+			border:1px solid #560000;
+			position:absolute;
+			left:10px;
+			top:200px;
+		}
+	</style>
 </head>
 <body>
     <h1 id="header">DX Timer Test</h1>
 
-	<div>
-
-	</div>
+	<div id="block"></div>
+	<script>
+		/*var n = document.getElementById('block');
+		var beg = 10;
+		var end = 510;
+		timer(function(evt){
+			var loc = (end-beg)*evt.percentage;
+			n.style.left = loc+'px';
+		}, 3000, 30, quadInOut);*/
+	</script>
 </body>
 </html>

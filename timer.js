@@ -13,6 +13,22 @@ define([],function(){
 				return function(){ method.apply(scope, arguments); }
 			}
 		},
+		eases = {
+			// all are "quad"
+			easeIn: function(/* Decimal? */n){
+				return Math.pow(n, 2);
+			},
+
+			easeOut: function(/* Decimal? */n){
+				return n * (n - 2) * -1;
+			},
+
+			easeInOut: function(/* Decimal? */n){
+				n = n * 2;
+				if(n < 1){ return Math.pow(n, 2) / 2; }
+				return -1 * ((--n) * (n - 2) - 1) / 2;
+			}
+		},
 		uids = 0,
 		uid = function(){
 			return 'TMR_'+(uids++);
@@ -21,19 +37,138 @@ define([],function(){
 		INC = 20,
 		DELAY = 100,
 		_uidInt = 0,
-		time = function(){ return (new Date()).getTime(); }
+		time = function(){ return (new Date()).getTime(); };
 
 
 	var timer = function(/* ?Object|Function */objectOrFunc, /* ?Function|String */ stringOrFunc, /* ?Number|Object */ durationOrOptions, /* ?Number */ interval, /* Function|Number*/ delayOrEase){
 
 		var
+			actx = 1,
+			afn = 1,
+			adur = 1,
+			aint = 1,
+			adelay = 1,
+			aform = 1,
+			aease = 1,
+			apause = 1
+			aoptions = 1;
+
+		var
+			INTEGER = 'integer',
+			SECONDS = 'seconds',
+			FLOAT = 'float',
+
+			o = {},
+			args = arguments,
+
+			ctx,
+			cb,	// bind callback
+			d,	// duration
+			i,	// increment
+			delay, 	// delay to start timer
+			format, // return integer, float, milliseconds|ms (default), number:toFixed
+			ease, //ease
+			pausedAtStart = false; // if true, does not start until prompted
+
+			// 2000, 100, "100"
+
+		var argList = Array.prototype.slice.call(arguments);
+
+		console.log('..')
+		while(argList.length){
+
+			var a = argList.shift();
+
+			//console.log(' --> a:', typeof a, typeof a != 'function', a)
+
+			if(actx){
+				actx = 0;
+				if(typeof a == 'object' && typeof a != 'function'){
+					ctx = a;
+					continue;
+				}
+
+			}
+
+			if(afn){
+				afn = 0;
+				if(typeof a == 'function'){
+					cb = !!ctx ? bind(ctx, a) : a;
+					continue;
+				}
+			}
+
+			if(adur){
+				adur = 0;
+				if(typeof a == 'number'){
+					d = a;
+					continue;
+				}
+			}
+
+			if(aint){
+				aint = 0;
+				if(typeof a == 'number'){
+					i = a;
+					continue;
+				}
+			}
+
+			if(adelay){
+				adelay = 0;
+				if(typeof a == 'number' || Number(a) == a){ // allow stringified delay
+					d = Number(a);
+					continue;
+				}
+			}
+
+			if(aform){
+				aform = 0;
+				if(typeof a == 'string' && (a == INTEGER || a == FLOAT || a == SECONDS )){
+					format = a;
+					continue;
+				}
+			}
+
+			if(aease){
+				aease = 0;
+				if(typeof a == 'string' && eases[a]){
+					ease = eases[a];
+					continue;
+				}
+			}
+
+			if(apause){
+				apause = 0;
+				if(typeof a === true){
+					pausedAtStart = 1;
+					continue;
+				}
+			}
+
+			if(aoptions){
+				if(a.ctx) ctx = a.ctx;
+				if(a.callback) fn = !!ctx ? bind(ctx, a.callback) : a.callback;
+				if(a.i) i = a.i;
+				if(a.d) d = a.d;
+				if(a.delay) delay = a.delay;
+				if(a.format) format = a.format;
+				if(a.ease) ease = typeof a.ease == 'string' ? eases[a.ease] : a.ease;
+				if(a.paused) pausedAtStart = 1;
+			}
+		} // end while
+
+		if(!ease) ease = function(n){ return n; }
+		if(!d) d = Infinity;
+
+		/*var
 			o = {},
 			args = arguments,
 			i,	// increment
 			ease, //ease
 			d,	// duration
 			delay, 	// delay to start timer
-			onEnd,	// bind onEnd
+			//onEnd,	// bind onEnd
 			cb,	// bind callback
 			h, 	// timer handle
 			id,	// identifier for ref
@@ -78,7 +213,7 @@ define([],function(){
 			o.callback = args[1];
 		}
 
-		// options
+		// options (declared above)
 		d = o.dur || o.duration || o.d || Infinity;
 		i = o.inc || o.increment || o.i || 0;
 		ease = o.ease || function(n){ return n; }
@@ -87,29 +222,84 @@ define([],function(){
 		var ctx = o.ctx || window;
 
 		cb = !!f ? bind(ctx, f) : null;
-		onEnd = o.onEnd;
+		//onEnd = o.onEnd;
 		id = o.id || uid();
 		pausedAtStart = o.paused || false;
-		format = o.format || o.fmt || "ms";
+		format = o.format || o.fmt || "ms";*/
 
-		console.log("timer options:", id, d, i, delay, cb);
+		console.log("timer options:", d, i, delay, cb);
+
+		var
+			h; // timer handle
+
+		var
+			thenList = [],
+			addThen = function(c, f){
+				thenList.push(bind(c,f));
+				return getEvent();
+			},
+			thenCallback = function(evt){
+				for(var i=0;i<thenList.length;i++){
+					thenList[i](evt);
+				}
+				thenList = [];
+			},
+			formatTime = function(n){ return n; };
+			if(format == INTEGER){
+				formatTime = function(n){ return Math.ceil(n*.001); }
+			}else if(format == FLOAT){
+				formatTime = function(n){ return n*.001; }
+			}else if(typeof format == "number"){ // this ain't gonna happen
+				formatTime = function(n){ return Number(n.toFixed(format)); }
+			}
 
 		var
 			stopped = false,
 			playing = false,
 
 			starttime=0, startinc=0, pausetime=0, pausetick=0, elapsed=0, tick=0,
-			increment=0, pausedelay=0, resumedelay=0;
+			increment=0, pausedelay=0, resumedelay=0,
+			callback = function(){},
+			endback = function(){};
 
-		var formatTime = function(n){ return n; };
-		if(format == "integer"){
-			formatTime = function(n){ return Math.ceil(n*.001); }
-		}else if(format == "float"){
-			formatTime = function(n){ return n*.001; }
-		}else if(typeof format == "number"){
-			formatTime = function(n){ return Number(n.toFixed(format)); }
+
+		if(!!cb && !!i){
+			callback = function(){
+
+				if(increment >= i){
+					cb(getEvent());
+					startinc = time();
+				}
+			}
 		}
 
+		/*if(!!d && !!onEnd){
+			endback = function(){
+				if(tick >= d){
+					stopTimer();
+					//onEnd(getEvent());
+					thenCallback(getEvent());
+				}
+			}
+		}else */
+		if(!!d && !!cb){
+			endback = function(){
+				if(tick >= d){
+					stopTimer();
+					cb(getEvent());
+					thenCallback(getEvent());
+				}
+			}
+		}else if(!!d){
+			endback = function(){
+				if(tick >= d){
+					stopTimer();
+					thenCallback(getEvent());
+				}
+			}
+		}else{
+			// infinite timer
+		}
 
 		var handle = {
 			// methods
@@ -144,6 +334,7 @@ define([],function(){
 			},
 			stop:stop,
 			remove:stop,
+			then: addThen,
 
 			// properties
 			time:0,
@@ -154,9 +345,6 @@ define([],function(){
 			percentage:0,
 			playing:false
 		};
-
-		var callback = function(){}, endback = function(){};
-
 		var getEvent = function(){
 			handle.time = 		formatTime(tick);
 			handle.playtime = 	formatTime(tick);
@@ -165,44 +353,10 @@ define([],function(){
 			handle.increment = 	formatTime(increment);
 			handle.percentage = 0;
 			handle.playing = 	playing;
-			handle.then = 		callback;
 
 			if(!!d) handle.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
 
 			return handle;
-		}
-
-		if(!!cb && !!i){
-			callback = function(){
-				if(increment >= i){
-					cb(getEvent());
-					startinc = time();
-				}
-			}
-		}
-
-		if(!!d && !!onEnd){
-			endback = function(){
-				if(tick >= d){
-					stopTimer();
-					onEnd(getEvent());
-				}
-			}
-		}else if(!!d && !!cb){
-			endback = function(){
-				if(tick >= d){
-					stopTimer();
-					cb(getEvent());
-				}
-			}
-		}else if(!!d){
-			endback = function(){
-				if(tick >= d){
-					stopTimer();
-				}
-			}
-		}else{
-			//console.warn("infinite timer")
 		}
 
 		// The actual timer happens here
