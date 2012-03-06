@@ -9,15 +9,16 @@
 		// no dur == Infinity
 		// no arguments should create an Infinite timer
 
-		timer(function(evt){
+/*		timer(function(evt){
 			console.log(' > timer done after 10', evt)
 		}, 10)//.then(function(){ console.log('--------- done'); });
 
-		/*
-		var tmr = timer();
+
+		var tmr1 = timer();
 
 		timer(function(){
-			console.log('timer done after 100', tmr.stop())
+			console.log('timer done after 100', tmr1)
+			tmr1.stop()
 		}, 100);
 
 		timer(function(evt){
@@ -29,7 +30,7 @@
 			console.log(' > timer start stop', evt)
 		}, 300, 50);
 
-*/
+
 		var ns = {
 			ctx: function(){
 				id:'it is good!',
@@ -57,19 +58,25 @@
 
 
 		var inf = timer(function(){ console.log('never called')}, 0, 500);
+		var t2 = timer(function(evt){
+			console.log(' > should be stopped!!!!', evt)
+		}, 500)
 		timer(function(){
-			console.log('stop other timer', inf.pause());
-		}, 2001);
+			console.log('stop other timer', inf.pause(), t2.pause());
+		}, 200);
+*/
 
-		//tmr.pause(200).resume(400).pause(600).resume(1200).then(function(){ console.log('we are done'); }).then(function(){ console.log('we are REALLY done'); });
-
+		var tmr = timer(function(evt){
+			console.log('tmr', evt);
+		}, 0, 30);
+		tmr.pause(200).resume(400).pause(600).resume(1200).pause(1600);
+		//.then(function(){ console.log('we are done'); }).then(function(){ console.log('we are REALLY done'); });
 		//tmr.pause(1000);
 		//tmr.resume(1200);
-
 		//console.log()
+		//timer(1000).pause(100).resume(200).then('foo');
 
-		// timer(1000).pause(100).resume(200).then('foo');
-    </script>
+	</script>
 	<style>
 		#block{
 			width:50px;

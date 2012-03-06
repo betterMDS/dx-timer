@@ -16,7 +16,12 @@ The timer is freely available under the same dual BSD/AFLv2 license as the Dojo 
 Description
 -----------
 
-The timer allows for 0, 1, 2, 3, 4 or 5 arguments. While this may seem "magic" it allows for versatility in your preferred method of calling a timer. It can be done traditionally, context can be added (you can use *this*), and duration, increment, and delay can be used. An easing function can also be added, so animation effects can be easily achieved. An object handle is returned that contains several methods so the timer can be paused, stopped, resumed, started, or removed.
+The timer allows for 0, 1, 2, 3, 4 or 5 arguments. While this may seem "magic"
+it allows for versatility in your preferred method of calling a timer. It can be
+done traditionally, context can be added (you can use *this*), and duration,
+increment, and delay can be used. An easing function can also be added,
+so animation effects can be easily achieved. An object handle is returned that
+contains several methods so the timer can be paused, stopped, resumed, started, or removed.
 
 Installation
 ------------
@@ -25,7 +30,7 @@ Download the dx-timer package, and install it in the same directory as your proj
 
 ```javascript
 require('timer', function(timer){
-	timer(function, duration);	
+	timer(function, duration);
 });
 ```
 But AMD is not required, and if so, the timer will be installed as a global object.
@@ -79,7 +84,7 @@ timer(function(TIMER_EVENT){}, 10);
 This event contains all information that has occurred up until that point in time:
 
 * **time** - The time that has elapsed since starting, minus any time when the timer was paused.
-* **pausetime** - The time in which the timer was paused, which would happen between _timerInstance.pause()_ and _timerInstance.resume()_. This is accumulative, so if there are multiple pauses it will represent the total. 
+* **pausetime** - The time in which the timer was paused, which would happen between _timerInstance.pause()_ and _timerInstance.resume()_. This is accumulative, so if there are multiple pauses it will represent the total.
 * **playtime** - Same as _time_. Included to clarify it's relative importance to _pausetime_.
 * **elapsed** - The amount of time that has elapsed since the timer was started. If there was no pause, this may not be the time you set in the duration, but it should be close. Otherwise this is the total of playtime and pausetime.
 * **increment** - The amount of time since the last callback.  This may not be the time you set in the increment, but it should be close.

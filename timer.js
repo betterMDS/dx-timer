@@ -37,21 +37,39 @@ define([],function(){
 		INC = 20,
 		DELAY = 100,
 		_uidInt = 0,
-		time = function(){ return (new Date()).getTime(); };
+		time = function(){
+			return (new Date()).getTime();
+		},
+
+		callbacks = {},
+		empty = function(o){ for(var n in o){ return 0; } return 1;},
+		iHandle = 0,
+		interval = function(callback){
+			// main timers run through this, as one timer with multiple
+			// callbacks is more efficient than multiple timers
+			var id = uid();
+			callbacks[id] = callback;
+			if(!iHandle){
+				iHandle = setInterval(function(){
+					for(var n in callbacks) callbacks[n]();
+				}, 1);
+			}
+
+			return {
+				remove: function(){
+					delete callbacks[id];
+					if(empty(callbacks)){
+						clearInterval(iHandle);
+						iHandle = 0;
+					}
+				}
+			}
+		};
 
 
-	var timer = function(/* ?Object|Function */objectOrFunc, /* ?Function|String */ stringOrFunc, /* ?Number|Object */ durationOrOptions, /* ?Number */ interval, /* Function|Number*/ delayOrEase){
 
-		var
-			actx = 1,
-			afn = 1,
-			adur = 1,
-			aint = 1,
-			adelay = 1,
-			aform = 1,
-			aease = 1,
-			apause = 1
-			aoptions = 1;
+
+	var timer = function(){
 
 		var
 			INTEGER = 'integer',
@@ -65,16 +83,25 @@ define([],function(){
 			cb,	// bind callback
 			d,	// duration
 			i,	// increment
-			delay, 	// delay to start timer
+			delay, 	// delay to start timer (number or stringified number)
 			format, // return integer, float, milliseconds|ms (default), number:toFixed
 			ease, //ease
 			pausedAtStart = false; // if true, does not start until prompted
 
-			// 2000, 100, "100"
-
 		var argList = Array.prototype.slice.call(arguments);
 
-		console.log('..')
+		// create variables from "magic argument signature(TM)"
+		var
+			actx = 1,
+			afn = 1,
+			adur = 1,
+			aint = 1,
+			adelay = 1,
+			aform = 1,
+			aease = 1,
+			apause = 1
+			aoptions = 1;
+
 		while(argList.length){
 
 			var a = argList.shift();
@@ -135,6 +162,9 @@ define([],function(){
 				if(typeof a == 'string' && eases[a]){
 					ease = eases[a];
 					continue;
+				}else if(typeof a == 'function'){
+					ease = a;
+					continue;
 				}
 			}
 
@@ -161,78 +191,13 @@ define([],function(){
 		if(!ease) ease = function(n){ return n; }
 		if(!d) d = Infinity;
 
-		/*var
-			o = {},
-			args = arguments,
-			i,	// increment
-			ease, //ease
-			d,	// duration
-			delay, 	// delay to start timer
-			//onEnd,	// bind onEnd
-			cb,	// bind callback
-			h, 	// timer handle
-			id,	// identifier for ref
-			format, // return integer, float, milliseconds|ms (default), number:toFixed
-			paused = false; // if true, does not start until prompted
-
-		// if used like a tradition setTimeout:
-		if(typeof args[0] == 'function'){
-			if(typeof args[1] == "object"){
-				o = args[1];
-			}else{
-				o.dur = args[1];
-				if(args[2]) o.inc = args[2];
-				if(args[3]){
-					if(typeof args[3] == 'number'){
-						o.delay = args[3];
-					}else{
-						o.ease = args[3];
-					}
-				}
-			}
-			o.callback = args[0];
-
-		}
-
-		// if used like a tradition setTimeout with context:
-		if(typeof args[1] == 'function'){
-			if(typeof args[2] == "object"){
-				o = args[2];
-			}else{
-				o.dur = args[2];
-				if(args[3]) o.inc = args[3];
-				if(args[4]){
-					if(typeof args[4] == 'number'){
-						o.delay = args[4];
-					}else{
-						o.ease = args[4];
-					}
-				}
-			}
-			o.ctx = args[0]
-			o.callback = args[1];
-		}
-
-		// options (declared above)
-		d = o.dur || o.duration || o.d || Infinity;
-		i = o.inc || o.increment || o.i || 0;
-		ease = o.ease || function(n){ return n; }
-		delay = o.delay===true ? DELAY : o.delay ? o.delay : 0;
-		var f = o.callback || o.method;
-		var ctx = o.ctx || window;
-
-		cb = !!f ? bind(ctx, f) : null;
-		//onEnd = o.onEnd;
-		id = o.id || uid();
-		pausedAtStart = o.paused || false;
-		format = o.format || o.fmt || "ms";*/
-
-		console.log("timer options:", d, i, delay, cb);
+		//console.log("timer options:", d, i, delay, cb);
 
 		var
 			h; // timer handle
 
 		var
+			// allow for promise-like then() chain
 			thenList = [],
 			addThen = function(c, f){
 				thenList.push(bind(c,f));
@@ -244,6 +209,8 @@ define([],function(){
 				}
 				thenList = [];
 			},
+
+			// format the return time
 			formatTime = function(n){ return n; };
 			if(format == INTEGER){
 				formatTime = function(n){ return Math.ceil(n*.001); }
@@ -263,9 +230,10 @@ define([],function(){
 			endback = function(){};
 
 
+		// create the proper functions here, to avoid unecessary if() statements
+		// that could slow things down
 		if(!!cb && !!i){
 			callback = function(){
-
 				if(increment >= i){
 					cb(getEvent());
 					startinc = time();
@@ -273,15 +241,6 @@ define([],function(){
 			}
 		}
 
-		/*if(!!d && !!onEnd){
-			endback = function(){
-				if(tick >= d){
-					stopTimer();
-					//onEnd(getEvent());
-					thenCallback(getEvent());
-				}
-			}
-		}else */
 		if(!!d && !!cb){
 			endback = function(){
 				if(tick >= d){
@@ -301,100 +260,12 @@ define([],function(){
 			// infinite timer
 		}
 
-		var handle = {
-			// methods
-			pause:function(_delay){
-				if(_delay){
-					setTimeout(function(){
-						console.log('paused delay', _delay);
-						pause()
-					}, _delay);
-					//console.log('paused delay', _delay);
-					//setTimeout(pause, _delay);
-				}else{
-					pause();
-				}
-				return getEvent();
-			},
-			resume: function(_delay){
-				if(_delay){
-					setTimeout(function(){
-						console.log('resumed delay', _delay);
-						resume()
-					}, _delay);
-				}else{
-					resume();
-				}
-				return getEvent();
-			},
-			start: function(_delay){
-				// this delay can be overwritten
-				start(_delay);
-				return getEvent();
-			},
-			stop:stop,
-			remove:stop,
-			then: addThen,
 
-			// properties
-			time:0,
-			playtime:0,
-			elapsed:0,
-			pausetime:0,
-			increment:0,
-			percentage:0,
-			playing:false
-		};
-		var getEvent = function(){
-			handle.time = 		formatTime(tick);
-			handle.playtime = 	formatTime(tick);
-			handle.elapsed = 	formatTime(elapsed);
-			handle.pausetime = 	formatTime(pausetime);
-			handle.increment = 	formatTime(increment);
-			handle.percentage = 0;
-			handle.playing = 	playing;
 
-			if(!!d) handle.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
 
-			return handle;
-		}
 
-		// The actual timer happens here
-		var startTimer = function(){
-			playing = true;
-			h = setInterval(function(){
-				tick = time() - starttime - pausetime;
-				increment = Math.max(0, time() - startinc);
-				elapsed = time()-starttime;
-				callback();
-				endback();
-			}, 1);
-		}
-
-		var stopTimer = function(){
-			playing = false;
-			clearInterval(h);
-		}
 
 		// controlling methods
-		var pause = function(){
-			console.log('pause!!!!');
-			stopTimer();
-			pausetick = time();
-			return getEvent();
-		}
-
-		var resume = function(){
-			console.log('resume!!!!');
-			if(stopped){
-				start();
-			}else{
-				pausetime += time() - pausetick;
-				startTimer();
-			}
-			return getEvent();
-		}
-
 		var stop = function(){
 			// stop cannot be delayed because
 			// it needs to happen syncronously
@@ -423,6 +294,91 @@ define([],function(){
 				starttime = startinc = time();
 				startTimer();
 			}, delay);
+		}
+
+		var pause = function(){
+			console.log('pause!!!!');
+			stopTimer();
+			pausetick = time();
+			return getEvent();
+		}
+
+		var resume = function(){
+			console.log('resume!!!!');
+			if(stopped){
+				start();
+			}else{
+				pausetime += time() - pausetick;
+				startTimer();
+			}
+			return getEvent();
+		}
+
+
+
+		// The actual timer happens here
+		var startTimer = function(){
+			playing = true;
+			h = interval(function(){
+				tick = time() - starttime - pausetime;
+				increment = Math.max(0, time() - startinc);
+				elapsed = time()-starttime;
+				callback();
+				endback();
+			});
+		}
+
+		var stopTimer = function(){
+			playing = false;
+			//clearInterval(h);
+			!!h && h.remove();
+		}
+
+
+
+
+
+		var handle = {
+			// methods
+			pause:function(_delay){
+				setTimeout(pause, _delay||0);
+				return getEvent();
+			},
+			resume: function(_delay){
+				setTimeout(resume, _delay||0);
+				return getEvent();
+			},
+			start: function(_delay){
+				// this delay can be overwritten
+				start(_delay);
+				return getEvent();
+			},
+			stop:stop,
+			remove:stop,
+			then: addThen,
+			onEnd: addThen,
+
+			// properties
+			time:0,
+			playtime:0,
+			elapsed:0,
+			pausetime:0,
+			increment:0,
+			percentage:0,
+			playing:false
+		};
+		var getEvent = function(){
+			handle.time = 		formatTime(tick);
+			handle.playtime = 	formatTime(tick);
+			handle.elapsed = 	formatTime(elapsed);
+			handle.pausetime = 	formatTime(pausetime);
+			handle.increment = 	formatTime(increment);
+			handle.percentage = 0;
+			handle.playing = 	playing;
+
+			if(!!d) handle.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
+
+			return handle;
 		}
 
 		start();
