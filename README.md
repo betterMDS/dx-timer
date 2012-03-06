@@ -29,7 +29,7 @@ Installation
 ------------
 
 Download the dx-timer package, and install it in the same directory as your
-project. It is AMD compatible, so it can be loaded as:
+project. It is [AMD](http://requirejs.org/) compatible, so it can be loaded as:
 
 ```javascript
 require('timer', function(timer){
@@ -184,6 +184,22 @@ var t = timer(function(){
 	console.log('simple timer complete.');
 }, 200).then(function(){console.log('simple timer then done!')});
 ```
+
+Experimental
+------------
+
+You can also chain commands on the timer, and pass in delay times:
+
+```javascript
+var tmr = timer(function(evt){
+	console.log('tmr', evt);
+}, 0, 30);
+tmr.pause(200).resume(400).pause(600).resume(1200).pause(1600);
+```
+This is experimental because the results may not be as you expect. The delay
+times start from when the command executes, not from when the timer started, so
+they are additive, and after a few commands you kind of lose track of where you
+are. 
 
 License
 -------

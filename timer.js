@@ -49,7 +49,7 @@ define([],function(){
 			if(!iHandle){
 				iHandle = setInterval(function(){
 					for(var n in callbacks) callbacks[n]();
-				}, 1);
+				}, 20);
 			}
 
 			return {
@@ -117,7 +117,7 @@ define([],function(){
 
 			if(afn){
 				afn = 0;
-				if(typeof a == 'function'){
+				if(typeof a == 'function' || (!!ctx && typeof a == 'string')){
 					cb = !!ctx ? bind(ctx, a) : a;
 					continue;
 				}
@@ -141,7 +141,7 @@ define([],function(){
 
 			if(adelay){
 				adelay = 0;
-				if(typeof a == 'number' || Number(a) == a){ // allow stringified delay
+				if(typeof a == 'number' || (typeof a == 'string' && Number(a) == a)){ // allow stringified delay
 					d = Number(a);
 					continue;
 				}
@@ -168,7 +168,7 @@ define([],function(){
 
 			if(apause){
 				apause = 0;
-				if(typeof a === true){
+				if(a === true){
 					pausedAtStart = 1;
 					continue;
 				}
@@ -189,7 +189,7 @@ define([],function(){
 		if(!ease) ease = function(n){ return n; }
 		if(!d) d = Infinity;
 
-		//console.log("timer options:", d, i, delay, cb);
+		console.log("timer options:", d, i, delay, cb, pausedAtStart);
 
 		var
 			h; // timer handle
@@ -230,13 +230,16 @@ define([],function(){
 
 		// create the proper functions here, to avoid unecessary if() statements
 		// that could slow things down
+		callback.name = 'empty';
 		if(!!cb && !!i){
 			callback = function(){
+				console.log('cb', increment,  i)
 				if(increment >= i){
 					cb(getEvent());
 					startinc = time();
 				}
 			}
+			callback.name = 'increment';
 		}
 
 		if(!!d && !!cb){
@@ -279,6 +282,7 @@ define([],function(){
 		}
 
 		var start = function(_delay){
+			console.log('start!!')
 			if(_delay !== undefined) delay = _delay;
 			if(pausedAtStart){
 				pausedAtStart = false;
@@ -363,7 +367,8 @@ define([],function(){
 			pausetime:0,
 			increment:0,
 			percentage:0,
-			playing:false
+			playing:false,
+			type :'timer'
 		};
 		var getEvent = function(){
 			handle.time = 		formatTime(tick);
@@ -373,6 +378,7 @@ define([],function(){
 			handle.increment = 	formatTime(increment);
 			handle.percentage = 0;
 			handle.playing = 	playing;
+
 
 			if(!!d) handle.percentage = ease(tick/d<0 ? 0 : tick/d>1 ? 1 : tick/d);
 
