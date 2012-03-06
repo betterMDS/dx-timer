@@ -65,6 +65,9 @@
 			console.log('stop other timer', inf.pause(), t2.pause());
 		}, 200);
 */
+		var t = timer(function(){
+			console.log('simple timer complete.');
+		}, 200).then(function(){console.log('simple timer then done!')});
 
 		var tmr = timer(function(evt){
 			console.log('tmr', evt);

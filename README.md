@@ -5,28 +5,31 @@ Acknowledgements
 
 Author: Mike Wilcox
 
-Email: anm9tr@gmail.com
+Email: mike.wilcox@bettervideo.com
 
-Website: [http://clubajax.org](http://clubajax.org)
-
-Twitter: [https://twitter.com/#!/clubajax](@clubajax)
+Website: http://bettervideo.com
 
 The timer is freely available under the same dual BSD/AFLv2 license as the Dojo Toolkit.
 
 Description
 -----------
 
-The timer allows for 0, 1, 2, 3, 4 or 5 arguments. While this may seem "magic"
-it allows for versatility in your preferred method of calling a timer. It can be
-done traditionally, context can be added (you can use *this*), and duration,
-increment, and delay can be used. An easing function can also be added,
-so animation effects can be easily achieved. An object handle is returned that
-contains several methods so the timer can be paused, stopped, resumed, started, or removed.
+The timer can be used traditionally, or context can be added (you can use *this*),
+plus duration, and an increment can be added as like setInterval. Other options
+include delay(s), easing functions, and formatting the event times.
+
+Unlike a normal setTimeout, the timer passes an event that indicates the time
+elapsed, plus, play time, paused time, and the percentage of time elapsed. It
+also a "playing" property.
+
+An object handle (which is also the event object) is returned that contains
+several methods so the timer can be paused, stopped, resumed, started, or removed.
 
 Installation
 ------------
 
-Download the dx-timer package, and install it in the same directory as your project. It is AMD compatible, so it can be loaded as:
+Download the dx-timer package, and install it in the same directory as your
+project. It is AMD compatible, so it can be loaded as:
 
 ```javascript
 require('timer', function(timer){
@@ -38,38 +41,79 @@ But AMD is not required, and if so, the timer will be installed as a global obje
 Usage
 -----
 
-The timer allows for 0, 1, 2, 3, 4 or 5 arguments. While this may seem "magic" it allows for versatility in your preferred method of calling a timer. It can be done traditionally with:
+The timer allows for multiple arguments. While this may seem "magic" it allows
+for versatility in your preferred method of calling a timer. All of the following
+arguments are optional, and it generally can be determined based on the order and
+type of argument. The exception is the delay, which is not a problem unless the
+increment is not used. If you wish to skip the increment, indicate the delay as
+a string.
 
 ```javascript
 timer(function, duration);
 ```
 
-or a context can be added as:
+Context can be added:
 
 ```javascript
-timer(object, function, duration).
+timer(this, function, duration);
 ```
 
-An additional argument makes it act as a setTimeout:
+An additional argument makes it act as a setInterval:
 
 ```javascript
-timer(object, function, duration, interval).
+timer(object, function, duration, interval);
 ```
 
-And the fifth argument, if a number, will be treated as a delay. If it is a function, it will be treated as an easing function.
+The next argument, if a number, will be treated as a delay. If it is acting
+as a setTimeout (with no interal) set it as a stringified number:
 
 ```javascript
-timer(object, function, duration, interval, quadInOut).
+timer(object, function, duration, "500");
 ```
 
-Additionally, if the last argument passed is an object, it will be treated as the options argument, which allows for all of the following:
+Next could be a string indicating the format for the numbers in the event object.
+The options are "integer", which rounds to the nearest second, "float" which
+returns seconds and three decimal places (unguaranteed). Otherwise it will be
+the default, miliseconds.
 
-* **i** - increment
+```javascript
+timer(object, function, duration, "integer");
+```
+
+The next argument can be a an easing function, or a string to use one of the
+built-in easing functions: "easeIn", "easeOut", or "easeInOut":
+
+```javascript
+timer(object, function, duration, "easeIn");
+```
+
+Finally, if the next argument is the Boolean *true*, the timer will be paused and
+not run until prompted:
+
+```javascript
+timer(object, function, duration, true);
+```
+
+Additionally, if the last argument passed is an object, it will be treated as the
+options argument. Note this can be the last argument, or the only argument.
+
+* **ctx** - context (this)
+* **callback** - the function to call on increments or on end
 * **d** - duration
-* **ease** - easing function
+* **i** - increment
 * **delay** - the amount to postpone the timer in milliseconds
-* **format** - Option to return "integer", "float", "milliseconds" or "ms" (default). Or, if a number is passed, it will be treated as a decimal place request, as: _time.toFixed(number)_
+* **format** - Option to return "integer", "float", "milliseconds" or "ms" (default).
+* **ease** - easing function
 * **paused** - if true, the timer does not start until prompted
+
+The timer can even operate with no arguments. The timer is created and started
+and can be controlled and tested through the handle:
+
+```javascript
+var handle = timer();
+handle.pause();
+console.log(handle.time);
+```
 
 
 Timer Event
@@ -83,9 +127,13 @@ timer(function(TIMER_EVENT){}, 10);
 
 This event contains all information that has occurred up until that point in time:
 
-* **time** - The time that has elapsed since starting, minus any time when the timer was paused.
-* **pausetime** - The time in which the timer was paused, which would happen between _timerInstance.pause()_ and _timerInstance.resume()_. This is accumulative, so if there are multiple pauses it will represent the total.
-* **playtime** - Same as _time_. Included to clarify it's relative importance to _pausetime_.
+* **time** - The time that has elapsed since starting, minus any time when the
+timer was paused.
+* **pausetime** - The time in which the timer was paused, which would happen
+between _timerInstance.pause()_ and _timerInstance.resume()_. This is
+accumulative, so if there are multiple pauses it will represent the total.
+* **playtime** - Same as _time_. Included to clarify it's relative importance to
+_pausetime_.
 * **elapsed** - The amount of time that has elapsed since the timer was started. If there was no pause, this may not be the time you set in the duration, but it should be close. Otherwise this is the total of playtime and pausetime.
 * **increment** - The amount of time since the last callback.  This may not be the time you set in the increment, but it should be close.
 * **percentage** - A float in the range of 0 - 1, this represents the percentage of the time elapsed (not including pauses). Useful for animations.
@@ -102,12 +150,24 @@ clearTimeout(handle);
 
 This is not only verbose, but it lacks versatility. The setTimeout can only be destroyed, not paused or resumed. The timer returns an object that contains multiple controls:
 
-* **pause** - Pauses the timer.
-* **resume** - Resumes a paused timer or starts it.
-* **start** - Starts or restarts a timer from the beginning.
-* **stop** - Stops a timer, but does not destroy it. Subsequent calls to _start_ or _resume_ will restart the timer.
-* **remove** - Destroys the timer.
-* **getEvent** - Takes no action on the timer, but returns a TimerEvent (see above) with the current status.
+* **pause()** - Pauses the timer.
+* **resume()** - Resumes a paused timer or starts it.
+* **start()** - Starts or restarts a timer from the beginning.
+* **stop()** - Stops a timer, but does not destroy it. Subsequent calls to _start_ or _resume_ will restart the timer.
+* **remove()** - Destroys the timer. (Techinally just stops it)
+* **getEvent()** - Takes no action on the timer, but returns a TimerEvent (see above) with the current status.
+
+Chaining
+--------
+
+The timer has a promise-like chaining ability, by adding *then()* to the end of
+it:
+
+```javascript
+var t = timer(function(){
+	console.log('simple timer complete.');
+}, 200).then(function(){console.log('simple timer then done!')});
+```
 
 License
 -------

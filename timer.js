@@ -33,9 +33,6 @@ define([],function(){
 		uid = function(){
 			return 'TMR_'+(uids++);
 		},
-		DUR = 100,
-		INC = 20,
-		DELAY = 100,
 		_uidInt = 0,
 		time = function(){
 			return (new Date()).getTime();
@@ -110,7 +107,8 @@ define([],function(){
 
 			if(actx){
 				actx = 0;
-				if(typeof a == 'object' && typeof a != 'function'){
+				// if one arg and it's an object, then expect an options object.
+				if(args.length > 1 && typeof a == 'object' && typeof a != 'function'){
 					ctx = a;
 					continue;
 				}
@@ -214,7 +212,7 @@ define([],function(){
 			formatTime = function(n){ return n; };
 			if(format == INTEGER){
 				formatTime = function(n){ return Math.ceil(n*.001); }
-			}else if(format == FLOAT){
+			}else if(format == SECONDS){
 				formatTime = function(n){ return n*.001; }
 			}else if(typeof format == "number"){ // this ain't gonna happen
 				formatTime = function(n){ return Number(n.toFixed(format)); }
