@@ -9,12 +9,12 @@ Email: mike.wilcox@bettervideo.com
 
 Website: http://bettervideo.com
 
-The timer is freely available under the same dual BSD/AFLv2 license as the Dojo Toolkit.
+The **timer** is freely available under the same dual BSD/AFLv2 license as the Dojo Toolkit.
 
 Description
 -----------
 
-The timer can be used traditionally, or context can be added (you can use *this*),
+The **timer** can be used traditionally, or context can be added (you can use *this*),
 plus duration, and an increment can be added to act as setInterval. Other options
 include delay(s), easing functions, and formatting the event times.
 
@@ -38,10 +38,14 @@ require('timer', function(timer){
 ```
 But AMD is not required, and if so, the **timer** will be installed as a global object.
 
+Dependencies
+------------
+
+The **timer** has no dependencies. It is completely standalone.
 Usage
 -----
 
-The timer allows for multiple arguments. While this may seem "magic" it allows
+The **timer** allows for multiple arguments. While this may seem "magic" it allows
 for versatility in your preferred method of calling a timer. All of the following
 arguments are optional, and it generally can be determined based on the order and
 type of argument. The exception is the delay, which is not a problem unless the
@@ -110,17 +114,8 @@ timer({
 });
 ```
 
-* **ctx** - context (this)
-* **callback** - the function to call on increments or on end
-* **d** - duration
-* **i** - increment
-* **delay** - the amount to postpone the **timer** in milliseconds
-* **format** - Option to return "integer", "float", "milliseconds" or "ms" (default).
-* **ease** - easing function
-* **paused** - if true, the **timer** does not start until prompted
-
-The timer can even operate with no arguments. The timer is created and started
-and can be controlled and tested through the handle:
+The **timer** can even operate with no arguments. It can be started,
+controlled, and tested through the handle:
 
 ```javascript
 var handle = timer();
@@ -166,7 +161,7 @@ clearTimeout(handle);
 ```
 
 This is not only verbose, but it lacks versatility. The setTimeout can only be
-destroyed, not paused or resumed. The timer returns an object that contains
+destroyed, not paused or resumed. The **timer** returns an object that contains
 multiple controls:
 
 * **pause()** - Pauses the **timer**.
@@ -181,7 +176,7 @@ above) with the current status.
 Chaining
 --------
 
-The timer has a promise-like chaining ability, by adding *then()* to the end of
+The **timer** has a promise-like chaining ability, by adding *then()* to the end of
 it:
 
 ```javascript
@@ -193,6 +188,6 @@ var t = timer(function(){
 License
 -------
 
-The timer is available via Academic Free License >= 2.1 OR the
+The **timer** is available via Academic Free License >= 2.1 OR the
 modified BSD license. see: [http://dojotoolkit.org/license]
 (http://bugs.dojotoolkit.org/browser/dojo/trunk/LICENSE) for details
